@@ -44,16 +44,39 @@ func (b *builder) Build() (string, error) {
 		switch field := field.Interface().(type) {
 		case uint, uint8, uint16, uint32, uint64,
 			int, int8, int16, int32, int64:
-			// Int.
-			switch field.(type) {
-			case uint, uint32, uint64, int64:
+			// Check if the integer might overflow GraphQL Int (which is a 32-bit signed integer)
+			shouldWarn := false
+			var intVal int64
+			switch specific := field.(type) {
+			case uint, uint32:
+				intVal = int64(specific.(uint32))
+				if intVal > 2147483647 {
+					shouldWarn = true
+				}
+			case uint64:
+				intVal = int64(specific)
+				if intVal > 2147483647 || intVal < -2147483648 {
+					shouldWarn = true
+				}
+			case int64:
+				intVal = specific
+				if intVal > 2147483647 || intVal < -2147483648 {
+					shouldWarn = true
+				}
+			}
+
+			if shouldWarn {
 				logrus.WithFields(logrus.Fields{
 					"name": structField.Name,
 					"type": structField.Type.String(),
 				}).Warnln("dangerous converting: may exceeds graphQL int32 range")
 			}
 
-			b.WriteLine(1, name+": Int"+b.NotNullString)
+			if intVal > 2147483647 || intVal < -2147483648 {
+				b.WriteLine(1, name+": String"+b.NotNullString) // Handle as string if out of Int32 range
+			} else {
+				b.WriteLine(1, name+": Int"+b.NotNullString)
+			}
 		case string:
 			b.WriteLine(1, name+": String"+b.NotNullString)
 		case time.Duration:
