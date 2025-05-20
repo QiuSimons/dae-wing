@@ -211,7 +211,11 @@ func newControlPlane(log *logrus.Logger, bpf interface{}, dnsCache map[string]*c
 
 	// Deep copy to prevent modification.
 	conf = deepcopy.Copy(conf).(*daeConfig.Config)
-
+    
+	// Init Direct Dialers.
+	direct.InitDirectDialers(conf.Global.FallbackResovler)
+	netutils.FallbackDns = netip.MustParseAddrPort(conf.Global.FallbackResovler)
+    
 	if !conf.Global.DisableWaitingNetwork && len(conf.Global.WanInterface) > 0 {
 		// Wait for network for WAN ready.
 		onceWaitingNetwork.Do(func() {
