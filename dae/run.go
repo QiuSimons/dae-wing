@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+    "net/netip"
 
 	daeConfig "github.com/daeuniverse/dae/config"
 	"github.com/daeuniverse/dae/control"
@@ -16,6 +17,8 @@ import (
 	"github.com/daeuniverse/dae/pkg/logger"
 	"github.com/mohae/deepcopy"
 	"github.com/sirupsen/logrus"
+    "github.com/daeuniverse/outbound/protocol/direct"
+    "github.com/daeuniverse/dae/common/netutils"
 )
 
 var ErrControlPlaneNotInit = fmt.Errorf("control plane doesn't init yet")
